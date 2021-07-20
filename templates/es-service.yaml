@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
+  labels:
+    app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
+    {{- include "log.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.elasticsearch.service.type }}
+  {{- if .Values.elasticsearch.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.elasticsearch.service.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.elasticsearch.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.elasticsearch.service.externalTrafficPolicy }}
+  {{- end }}
+  ports:
+  - port: {{ .Values.elasticsearch.service.dbPort }}
+    targetPort: 9200
+    name: db
+    protocol: TCP
+    {{- if and (or (eq .Values.elasticsearch.service.type "NodePort") (eq .Values.elasticsearch.service.type "LoadBalancer")) (not (empty .Values.elasticsearch.service.dbNodePort)) }}
+    nodePort: {{ .Values.elasticsearch.service.dbNodePort }}
+    {{- else if eq .Values.elasticsearch.service.type "ClusterIP" }}
+    nodePort: null
+    {{- end }}
+  - port: {{ .Values.elasticsearch.service.transportPort }}
+    targetPort: 9300
+    name: transport
+    protocol: TCP
+    {{- if and (or (eq .Values.elasticsearch.service.type "NodePort") (eq .Values.elasticsearch.service.type "LoadBalancer")) (not (empty .Values.elasticsearch.service.transportNodePort)) }}
+    nodePort: {{ .Values.elasticsearch.service.transportNodePort }}
+    {{- else if eq .Values.elasticsearch.service.type "ClusterIP" }}
+    nodePort: null
+    {{- end }}
+  {{- with .Values.elasticsearch.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  publishNotReadyAddresses: {{ .Values.elasticsearch.service.publishNotReadyAddresses }}
+  selector:
+    {{- include "log.selectorLabels" . | nindent 4 }}
+    app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}

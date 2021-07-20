@@ -1,0 +1,70 @@
+# Default values for log.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+elasticsearch:
+  name: es
+  replicas: 2
+
+  image:
+    registry: quay.io
+    repository: fluentd_elasticsearch/elasticsearch
+    tag: v7.10.2
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    dbPort: 9200
+    # dbNodePort: 29200
+    transportPort: 9300
+    # transportNodePort: 29300
+    publishNotReadyAddresses: true
+    loadBalancerIP: ""
+    externalTrafficPolicy: ""
+    loadBalancerSourceRanges: []
+
+  persistence:
+    enabled: true
+    # existingClaim:
+    # storageClass: "-"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
+
+  cronjob:
+    enabled: true
+    schedule: "3 1 */1 * *"
+    deleteDay: "20"
+    deleteIndex: "logs alpha zero"
+
+logPilot:
+  enabled: true
+  name: log-pilot
+
+  image:
+    registry: registry.cn-hangzhou.aliyuncs.com
+    repository: acs/log-pilot
+    tag: 0.9.7-filebeat
+    pullPolicy: IfNotPresent
+
+  extraEnvs:
+    # 配置ES访问权限
+    - name: "ELASTICSEARCH_USER"
+      value: ""
+    - name: "ELASTICSEARCH_PASSWORD"
+      value: ""
+
+logstash:
+  enabled: true
+  name: logstash
+  replicas: 1
+  initialProbeDelay: 30
+
+  image:
+    registry: docker.io
+    repository: logstash
+    tag: 7.13.3
+    pullPolicy: IfNotPresent
+
+  extraEnvs: []
+

@@ -1,0 +1,73 @@
+{{- if and .Values.logstash.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}
+  labels:
+    {{- include "log.selectorLabels" . | nindent 4 }}
+    app: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}
+spec:
+  replicas: {{ .Values.logstash.replicas }}
+  selector:
+    matchLabels:
+      {{- include "log.selectorLabels" . | nindent 6 }}
+      app: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}
+  template:
+    metadata:
+      labels:
+        {{- include "log.selectorLabels" . | nindent 8 }}
+        app: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}
+    spec:
+      containers:
+        - name: {{ .Values.logstash.name }}
+          image: {{ template "logPilot.image" . }}
+          imagePullPolicy: {{ .Values.logstash.image.pullPolicy }}
+          ports:
+            - name: input_tcp_port
+              containerPort: 5000
+              protocol: TCP
+            - name: input_udp_port
+              containerPort: 5000
+              protocol: UDP
+            - name: input_http_port
+              containerPort: 5001
+              protocol: TCP
+          env:
+            - name: INPUT_TCP_PORT
+              value: "5000"
+            - name: INPUT_UDP_PORT
+              value: "5000"
+            - name: INPUT_HTTP_PORT
+              value: "5001"
+            - name: ELASTICSEARCH_HOST
+              value: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
+            - name: ELASTICSEARCH_PORT
+              value: "{{ .Values.elasticsearch.service.dbPort }}"
+            - name: LOGSTASH_DEBUG
+              value: "false"
+            - name: TZ
+              value: Asia/Shanghai
+            {{- if .Values.logstash.extraEnvs }}
+            {{- include "log.tplValue" (dict "value" .Values.logstash.extraEnvs "context" $) | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - http://127.0.0.1:5001
+            initialDelaySeconds: {{ .Values.logstash.initialProbeDelay }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            exec:
+              command:
+                - curl
+                - http://127.0.0.1:5001
+            initialDelaySeconds: {{ .Values.logstash.initialProbeDelay }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+{{- end }}

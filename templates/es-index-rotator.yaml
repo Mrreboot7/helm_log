@@ -1,0 +1,28 @@
+{{- if and .Values.elasticsearch.cronjob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}-index-rotator
+  labels:
+    app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}-index-rotator
+    {{- include "log.labels" . | nindent 4 }}
+spec:
+  # 每天1点3分执行
+  schedule: {{ .Values.elasticsearch.cronjob.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ include "log.fullname" . }}-es-index-rotator
+            image: easzlab/es-index-rotator:0.2.1
+            # 保留最近20天日志
+            command:
+            - /bin/rotate.sh
+            - {{ .Values.elasticsearch.cronjob.deleteDay }}
+            - {{ .Values.elasticsearch.cronjob.deleteIndex }}  # fluented 默认创建的index形如'logs-2020.01.01'
+          restartPolicy: OnFailure
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+{{- end }}

@@ -1,0 +1,98 @@
+{{- if and .Values.logPilot.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "log.fullname" . }}-{{ .Values.logPilot.name }}
+  labels:
+    {{- include "log.selectorLabels" . | nindent 4 }}
+    app: {{ include "log.fullname" . }}-{{ .Values.logPilot.name }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "log.selectorLabels" . | nindent 6 }}
+      app: {{ include "log.fullname" . }}-{{ .Values.logPilot.name }}
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        {{- include "log.selectorLabels" . | nindent 8 }}
+        app: {{ include "log.fullname" . }}-{{ .Values.logPilot.name }}
+    spec:
+      # 是否允许部署到Master节点上
+      #tolerations:
+      #- key: node-role.kubernetes.io/master
+      #  effect: NoSchedule
+      # priorityClassName: system-cluster-critical
+      containers:
+      - name: {{ .Values.logPilot.name }}
+        # 版本请参考https://github.com/AliyunContainerService/log-pilot/releases
+        image: {{ template "logPilot.image" . }}
+        imagePullPolicy: {{ .Values.logPilot.image.pullPolicy | quote }}
+        resources:
+          limits:
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        env:
+          - name: "NODE_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: "LOGGING_OUTPUT"
+            value: "elasticsearch"
+          # 请确保集群到ES网络可达
+          - name: "ELASTICSEARCH_HOSTS"
+            value: "{{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}:9200"
+          {{- if .Values.logPilot.extraEnvs }}
+          {{- include "log.tplValue" (dict "value" .Values.logPilot.extraEnvs "context" $) | nindent 10 }}
+          {{- end }}
+        volumeMounts:
+        - name: sock
+          mountPath: /var/run/docker.sock
+        - name: root
+          mountPath: /host
+          readOnly: true
+        - name: varlib
+          mountPath: /var/lib/filebeat
+        - name: varlog
+          mountPath: /var/log/filebeat
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        livenessProbe:
+          failureThreshold: 3
+          exec:
+            command:
+            - /pilot/healthz
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        securityContext:
+          capabilities:
+            add:
+            - SYS_ADMIN
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+      - name: ydy-test-key
+      volumes:
+      - name: sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: root
+        hostPath:
+          path: /
+      - name: varlib
+        hostPath:
+          path: /var/lib/filebeat
+          type: DirectoryOrCreate
+      - name: varlog
+        hostPath:
+          path: /var/log/filebeat
+          type: DirectoryOrCreate
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+{{- end }}

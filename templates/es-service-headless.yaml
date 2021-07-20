@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}-headless
+  labels:
+    app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
+    {{- include "log.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - name: db
+      port: 9200
+      protocol: TCP
+      targetPort: 9200
+    - name: transport
+      port: 9300
+      protocol: TCP
+      targetPort: 9300
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "log.selectorLabels" . | nindent 4 }}
+    app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
+  sessionAffinity: None
+  type: ClusterIP

@@ -75,8 +75,6 @@ spec:
             add:
             - SYS_ADMIN
       terminationGracePeriodSeconds: 30
-      imagePullSecrets:
-      - name: ydy-test-key
       volumes:
       - name: sock
         hostPath:

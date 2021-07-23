@@ -51,23 +51,35 @@ spec:
             {{- include "log.tplValue" (dict "value" .Values.logstash.extraEnvs "context" $) | nindent 12 }}
             {{- end }}
           livenessProbe:
-            exec:
-              command:
-                - curl
-                - http://127.0.0.1:5001
+            httpGet:
+              path: /
+              port: 5001
             initialDelaySeconds: {{ .Values.logstash.initialProbeDelay }}
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
             successThreshold: 1
           readinessProbe:
-            exec:
-              command:
-                - curl
-                - http://127.0.0.1:5001
+            httpGet:
+              path: /
+              port: 5001
             initialDelaySeconds: {{ .Values.logstash.initialProbeDelay }}
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
             successThreshold: 1
+          volumeMounts:
+            - mountPath: /usr/share/logstash/config/logstash.yml
+              name: default-config
+              subPath: logstash.yml
+            - mountPath: /usr/share/logstash/pipeline/logstash.conf
+              name: pipeline-config
+              subPath: logstash.conf
+      volumes:
+        - configMap:
+            name: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}-config
+          name: default-config
+        - configMap:
+            name: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}-pipeline
+          name: pipeline-config
 {{- end }}

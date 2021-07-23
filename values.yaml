@@ -6,9 +6,9 @@ elasticsearch:
   replicas: 2
 
   image:
-    registry: quay.io
-    repository: fluentd_elasticsearch/elasticsearch
-    tag: v7.10.2
+    registry: docker.io
+    repository: elasticsearch
+    tag: 6.4.1
     pullPolicy: IfNotPresent
 
   service:
@@ -27,7 +27,7 @@ elasticsearch:
     # existingClaim:
     # storageClass: "-"
     accessModes:
-      - ReadWriteOnce
+      - ReadWriteMany
     size: 8Gi
     annotations: {}
 
@@ -63,7 +63,7 @@ logstash:
   image:
     registry: docker.io
     repository: logstash
-    tag: 7.13.3
+    tag: 6.4.1
     pullPolicy: IfNotPresent
 
   extraEnvs: []

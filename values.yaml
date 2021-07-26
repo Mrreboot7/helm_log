@@ -38,7 +38,7 @@ elasticsearch:
     deleteDay: "20"
     deleteIndex: [logs, alpha, zero]
 
-logPilot:
+logPilot: # 只能docker使用
   enabled: true
   name: log-pilot
 

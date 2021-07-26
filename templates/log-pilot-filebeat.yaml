@@ -51,7 +51,7 @@ spec:
           {{- end }}
         volumeMounts:
         - name: sock
-          mountPath: /var/run/containerd/containerd.sock
+          mountPath: /var/run/docker.sock
         - name: root
           mountPath: /host
           readOnly: true

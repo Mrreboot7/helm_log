@@ -18,6 +18,7 @@ spec:
         {{- include "log.selectorLabels" . | nindent 8 }}
         app: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
     spec:
+      {{- include "log.imagePullSecrets" . | indent 6 }}
       serviceAccountName: {{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}
       # Elasticsearch requires vm.max_map_count to be at least 262144.
       # If your OS already sets up this number to a higher value, feel free

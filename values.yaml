@@ -1,8 +1,9 @@
 # Default values for log.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+imagePullSecrets: ["aliyun"]
 elasticsearch:
-  name: es
+  name: elasticsearch
   replicas: 2
 
   image:
@@ -35,7 +36,7 @@ elasticsearch:
     enabled: true
     schedule: "3 1 */1 * *"
     deleteDay: "20"
-    deleteIndex: "logs alpha zero"
+    deleteIndex: [logs, alpha, zero]
 
 logPilot:
   enabled: true

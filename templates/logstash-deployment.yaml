@@ -18,18 +18,19 @@ spec:
         {{- include "log.selectorLabels" . | nindent 8 }}
         app: {{ include "log.fullname" . }}-{{ .Values.logstash.name }}
     spec:
+      {{- include "log.imagePullSecrets" . | indent 6 }}
       containers:
         - name: {{ .Values.logstash.name }}
-          image: {{ template "logPilot.image" . }}
+          image: {{ template "logstash.image" . }}
           imagePullPolicy: {{ .Values.logstash.image.pullPolicy }}
           ports:
-            - name: input_tcp_port
+            - name: input-tcp-port
               containerPort: 5000
               protocol: TCP
-            - name: input_udp_port
+            - name: input-udp-port
               containerPort: 5000
               protocol: UDP
-            - name: input_http_port
+            - name: input-http-port
               containerPort: 5001
               protocol: TCP
           env:

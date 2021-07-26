@@ -24,6 +24,7 @@ spec:
       #- key: node-role.kubernetes.io/master
       #  effect: NoSchedule
       # priorityClassName: system-cluster-critical
+      {{- include "log.imagePullSecrets" . | indent 6 }}
       containers:
       - name: {{ .Values.logPilot.name }}
         # 版本请参考https://github.com/AliyunContainerService/log-pilot/releases
@@ -50,7 +51,7 @@ spec:
           {{- end }}
         volumeMounts:
         - name: sock
-          mountPath: /var/run/docker.sock
+          mountPath: /var/run/containerd/containerd.sock
         - name: root
           mountPath: /host
           readOnly: true

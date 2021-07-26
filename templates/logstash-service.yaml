@@ -10,17 +10,17 @@ spec:
   type: ClusterIP
   ports:
     - port: 5000
-      targetPort: input_tcp_port
+      targetPort: input-tcp-port
       protocol: TCP
-      name: input_tcp_port
+      name: input-tcp-port
     - port: 5000
-      targetPort: input_udp_port
-      protocol: TCP
-      name: input_udp_port
+      targetPort: input-udp-port
+      protocol: UDP
+      name: input-udp-port
     - port: 5001
-      targetPort: input_http_port
+      targetPort: input-http-port
       protocol: TCP
-      name: input_http_port
+      name: input-http-port
 
   selector:
     {{- include "log.selectorLabels" . | nindent 4 }}

@@ -13,14 +13,21 @@ spec:
     spec:
       template:
         spec:
+          {{- include "log.imagePullSecrets" . | indent 10 }}
           containers:
           - name: {{ include "log.fullname" . }}-es-index-rotator
-            image: easzlab/es-index-rotator:0.2.1
+            image: registry.cn-shenzhen.aliyuncs.com/panorama/es-index-rotator:v1.9.1
             # 保留最近20天日志
-            command:
+            command: # fluented 默认创建的index形如'logs-2020.01.01'
             - /bin/rotate.sh
-            - {{ .Values.elasticsearch.cronjob.deleteDay }}
-            - {{ .Values.elasticsearch.cronjob.deleteIndex }}  # fluented 默认创建的index形如'logs-2020.01.01'
+            - "{{ .Values.elasticsearch.cronjob.deleteDay }}"
+            {{- range .Values.elasticsearch.cronjob.deleteIndex }}
+            - {{ . }}
+            {{- end}}
+            env:
+              # 请确保集群到ES网络可达
+              - name: "ELASTICSEARCH_HOSTS"
+                value: "{{ include "log.fullname" . }}-{{ .Values.elasticsearch.name }}:9200"
           restartPolicy: OnFailure
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 2
